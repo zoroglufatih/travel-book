@@ -13,6 +13,8 @@ class ListViewController: UIViewController, UITableViewDelegate, UITableViewData
     @IBOutlet weak var tableView: UITableView!
     var titleArray = [String]()
     var idArray = [UUID]()
+    var choosenTitle = ""
+    var choosenTitleId : UUID?
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -24,7 +26,11 @@ class ListViewController: UIViewController, UITableViewDelegate, UITableViewData
         getData()
     }
     
-    func getData(){
+    override func viewDidAppear(_ animated: Bool) {
+        NotificationCenter.default.addObserver(self, selector: #selector(getData), name: NSNotification.Name("newPlace"), object: nil)
+    }
+    
+    @objc func getData(){
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let context = appDelegate.persistentContainer.viewContext
         
@@ -60,6 +66,7 @@ class ListViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     @objc func addButtonClicked(){
+        choosenTitle = ""
         performSegue(withIdentifier: "toViewController", sender: nil)
     }
     
@@ -70,5 +77,19 @@ class ListViewController: UIViewController, UITableViewDelegate, UITableViewData
         let cell = UITableViewCell()
         cell.textLabel?.text = titleArray[indexPath.row]
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        choosenTitle = titleArray[indexPath.row]
+        choosenTitleId = idArray[indexPath.row]
+        performSegue(withIdentifier: "toViewController", sender: nil)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "toViewController"{
+            let destinationVC = segue.destination as! ViewController
+            destinationVC.selectedTitle = choosenTitle
+            destinationVC.selectedTitleId = choosenTitleId
+        }
     }
 }
